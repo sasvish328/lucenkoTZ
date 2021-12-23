@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="Windows-1251" />
+  <title>pr5</title>
+  <script>'use strict';
+  </script>
+</head>
+<style>
+</style>
+
+<body class="main-page">
+  <script>
+    // dataGen(8); // генерируем случ данные размерности 8
+
+    // массив, что ниже (arr2n), можно переделать на чуть другой.
+    // Хранить объект Координаты (x,y), затем уже время. Да ещё и
+    // ввести 4й элемент, <время накопительное>. Это 4е поле будет 
+    // аналогом кэша. 
+
+    let arr2n = [
+      [0, 0, 10],
+      [50, 50, 25],
+      [200, 100, 10],
+      [500, 200, 20],
+      [10, 400, 30],
+      [-500, 1000, 0]
+    ]; // 6 точек, 5 участков
+
+
+    function getDistance(x1, y1, x2, y2) {
+      // считаем расстояние 1го участка
+      return Math.sqrt(Math.pow((x1 - x2), 2) + Math.pow((y2 - y1), 2));
+    }
+
+
+    function getTimeInSegment(x1, y1, x2, y2, v) {
+      // считаем время на 1м участке
+      return getDistance(x1, y1, x2, y2) / v;
+    }
+
+
+    function getTimeInChain(arr, n1, n2) {
+      // считаем время на некоем отрезке массива
+      // n1 - начальный узел, n2 - конец маршрута
+      // в терминах, как обычно говорят люди,
+      // n2-й участок. getTimeInChain(ххх, 0, 1) = <1й участок>
+      let fullTime = 0;
+      let currentTime;
+      try {
+        let x1, y1, x2, y2, v;
+        for (let i = n1; i < n2; i++) {
+          x1 = arr[i][0];
+          y1 = arr[i][1];
+          v = arr[i][2];
+          x2 = arr[i + 1][0];
+          y2 = arr[i + 1][1];
+          currentTime = getTimeInSegment(x1, y1, x2, y2, v);
+          fullTime += currentTime;
+        }
+      }
+      catch (e) {
+        // анализ выхода за границы массива
+        // что-то наподобие IndexOutOfRangeException
+        console.log("неверные параметры вызова функции: " + e.message);
+      }
+      return fullTime;
+    }
+
+    function calcSection(arr, t) {
+      // высчитываем участок, на кот будет объект в момент времени t
+
+      if (l = 0) return console.log("ошибочный массив, в нём нет элементов");
+      //  лучше бы этот анализ
+      // сделать чуть раньше, в main-части
+
+      if (t < 0) return console.log("ошибочное (отрицательное) время");
+
+      let totTime = 0;
+      for (let i = 0; i < arr.length - 1; i++) {
+        totTime += getTimeInChain(arr, i, i + 1);
+        if (totTime > t) { // мы нашли участок, на кот будет объект
+          return i;
+        }
+      }
+
+      return -1; // означает неуспешный поиск, точнее время слишком большое
+    }
+
+    function calcXY(arr, sect, t) {
+      // считаем координаты на известном участке
+      // в нашем упрощённом случае эта точка лежит на плоскости,
+      //  на прямой, на отрезке ([x1,y1];[x2,y2])
+      let x1, y1, x2, y2, v;
+
+      x1 = arr[sect][0];
+      y1 = arr[sect][1];
+      v = arr[sect][2];
+      x2 = arr[sect + 1][0];
+      y2 = arr[sect + 1][1];
+
+      let xObj, yObj, t1, t2, deltaT, tLocal, koeff;
+
+      t1 = getTimeInChain(arr, 0, sect); // время от начала до точки A
+      t2 = getTimeInChain(arr, 0, sect + 1); // -- "" -- до точки B
+      // в этом месте много лишней работы, если выч-й много, 
+      // можно организовать кэш.
+
+      deltaT = t2 - t1; // Это время прохода объектом отрезка AB
+
+      tLocal = t - t1; // Локальное время объекта на отрезке АВ. 
+      // 0 - в точке А, например.
+      koeff = tLocal / deltaT; // доля отрезка АВ (1 = весь, 
+      // 0.2 - одна пятая), которую прошёл объект
+
+      xObj = x1 + (x2 - x1) * koeff;
+      yObj = y1 + (y2 - y1) * koeff;
+
+      return [xObj, yObj];
+    }
+
+    function dataPrint(arr) {
+      // временная, для наглядности
+      let fullTime = 0;
+      let fullDist = 0;
+      let currentTime, previousTime = 0;
+      let x1, y1, x2, y2, v;
+
+      console.log("участок    dY         dТ       расст     время");
+
+      for (let i = 0; i < arr.length - 1; i++) {
+        x1 = arr[i][0];
+        y1 = arr[i][1];
+        v = arr[i][2];
+        x2 = arr[i + 1][0];
+        y2 = arr[i + 1][1];
+
+        currentTime = getTimeInSegment(x1, y1, x2, y2, v);
+        fullTime += currentTime;
+        fullDist += getDistance(x1, y1, x2, y2);
+
+        let wStr = String(i.toFixed(0));
+        wStr += ",";
+        wStr += String((i + 1).toFixed(0));
+        wStr += "       ";
+        wStr += String((y2 - y1).toFixed(2));
+        wStr += "     ";
+        wStr += String((fullTime - previousTime).toFixed(1));
+        wStr += "      ";
+        wStr += String(fullDist.toFixed(1));
+        wStr += "        ";
+        wStr += String(fullTime.toFixed(1));
+        console.log(wStr);
+
+        previousTime = fullTime;
+      };
+      return;
+    }
+
+    let t = 44; // задаём время 
+    // console.log("На " + t + "й секунде объект будет на "
+    //   + calcSection(arr2n, t) + "м участке");
+
+    let sect = calcSection(arr2n, t);
+    if (sect == -1) {
+      console.log("время слишком большое, объект уже стоит.");
+    } else {
+      let [x, y] = calcXY(arr2n, sect, t);
+      let wStr = "координаты объекта на " + t + "й секунде: х = ";
+      wStr += String(x.toFixed(2));
+      wStr += "; y = ";
+      wStr += String(y.toFixed(2));
+      wStr += " это ";
+      wStr += String(sect + 1);
+      wStr += "й участок";
+
+      console.log(wStr);
+      // console.log("координаты объекта на " + t + "й секунде: х = " + x + "; y = " + y + " это " + (sect + 1) + "й участок");
+    }
+    dataPrint(arr2n);
+
+
+  </script>
+
+
+
+</body>
+
+</html>

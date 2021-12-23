@@ -1,0 +1,28 @@
+ORDITEMS.DBF * INDEX on ORDER_ID TO ORDITEMS
+------------------------
+namegoods      character        10
+price          float            10     2
+quantity       integer           4
+amount         float            10     2
+order_id       character         8
+
+ORDER.DBF  *INDEX on customer_i TO order1
+------------------------
+id             character        10
+dateoper       date              8
+customer_i     character        10
+amount         Numeric          10     2
+
+GOODS.DBF * INDEX on name TO GOODS
+------------------------
+name         character          10
+price        Float              10    2
+quantity     integer             4
+workQuan     Integer             4
+
+CUSTOMER.DBF *INDEX on id TO cust1
+----------------------------
+Field Name      Type                Width
+ID              Character              10
+NAME            Character              10
+
